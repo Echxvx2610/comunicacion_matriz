@@ -12,7 +12,7 @@ choice = input("do you want to host (1) or to connect (2): ")
 
 if choice == '1':
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('localhost',2610)) #server.bind(('ip',port)) con fines de practica utilice el local host
+    server.bind(('172.27.182.132',2610)) #server.bind(('ip',port)) con fines de practica utilice el local host
     server.listen()
     
     client, _ = server.accept()
@@ -20,7 +20,8 @@ if choice == '1':
     public_parnet = rsa.PublicKey.load_pkcs1(client.recv(1024))
 elif choice == '2':
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('localhost',2610)) #recordar que en ip va el ip publico de ambas partes del chat
+    #client.connect(('localhost',2610)) #recordar que en ip va el ip publico de ambas partes del chat
+    client.connect(('172.27.182.132',2610))
     public_parnet = rsa.PublicKey.load_pkcs1(client.recv(1024))
     client.send(public_key.save_pkcs1("PEM"))
     

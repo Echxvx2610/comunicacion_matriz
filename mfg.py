@@ -18,6 +18,10 @@ class MissingDataError(Exception):
 class InvalidDataError(Exception):
     pass
 
+#................ Funciones de conexión entre apps ................
+
+
+
 # ............ :::::: Funciones para el manejo de archivos :::::: .......
 def validar_datos(datos):
     campos_obligatorios = ["-JOB-", "-FAMILIA-", "-SEC-", "-ENSAMBLE-","-PARTE-" ,"-EMPAQUETADO-"]

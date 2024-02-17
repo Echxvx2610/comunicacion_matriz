@@ -14,6 +14,14 @@ class MissingDataError(Exception):
 class InvalidDataError(Exception):
     pass
 
+
+
+#........... ::::: Funciones para conexion entre app:::::::............
+
+
+
+
+# ..............:::::: Funciones de manejo de archivos :::::::.............
 def cargar_datos_desde_csv(csv_file):
     try:
         with open(csv_file, mode='r') as file:
