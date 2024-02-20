@@ -6,19 +6,17 @@ from watchdog.events import FileSystemEventHandler
 class MyHandler(FileSystemEventHandler):
         def on_modified(self, event):
             if event.src_path.endswith(".csv"):
-                print(f"El archivo {event.src_path} ha sido modificado.")
+                print(f"Analisis matriz ha sido modificado!.Hora: {time.strftime('%H:%M:%S')}")
 
 def start_csv_observer(watched_folder):                      
     event_handler = MyHandler()
     observer = Observer()
     observer.schedule(event_handler, path=watched_folder, recursive=True)
     observer.start()
-
+    
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()    
-
-
