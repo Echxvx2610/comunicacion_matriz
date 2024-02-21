@@ -1,0 +1,19 @@
+21-02-2024 10:44:50 INFO     - Datos editados correctamente: ['180006523', 'KAIZEN', '20', '003-02365-1A', '014-0235-02', 'Charola', '12x08'] 
+21-02-2024 10:50:28 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:50:40 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:51:04 INFO     - Datos eliminados correctamente: ['BSMT185260', 'KOSATKA', '10', '003-20556-1A', '014-0534-02', 'Charola', '12X12'] 
+21-02-2024 10:51:11 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:51:20 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:52:02 INFO     - Datos editados correctamente: ['BSMT185248', 'KOSATKA', '10', '003-20556-1A', '014-0534-01', 'Charola', '10x10'] 
+21-02-2024 10:52:10 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:52:18 ERROR    Error al eliminar el registro: list index out of range 
+21-02-2024 10:52:26 ERROR    Faltan datos obligatorios: El campo 'JOB' es obligatorio y no puede estar vac�o.
+21-02-2024 10:52:30 ERROR    Faltan datos obligatorios: El campo 'JOB' es obligatorio y no puede estar vac�o.
+21-02-2024 10:52:59 INFO     - Datos registrados correctamente: ['BSTMK25365', 'TESTING', '20', '003-23652-2A', '014-05834-20', 'N/A', 'N/A'] 
+21-02-2024 10:53:31 INFO     - Datos editados correctamente: ['BSTMK25365', 'JUJUTSU', '10', '003-23652-2A', '014-0534-02', 'Charola', '12x12'] 
+21-02-2024 10:54:07 INFO     - Datos editados correctamente: ['BSMT185242', 'DRAGON', '20', '003-32652-1A', '014-0843-02', 'Charola', '12x12'] 
+
+21-02-2024 10:54:51 INFO     - Datos editados correctamente: ['BSTMK25365', 'JUJUTSU', '10', '003-23652-2A', '014-0534-02', 'Charola', '12x12'] 
+
+21-02-2024 10:55:05 INFO     - Datos eliminados correctamente: ['BSMT185236', 'KOSATKA', '20', '003-20556-1A', '014-0534-00', 'Charola', '12x12'] 
+

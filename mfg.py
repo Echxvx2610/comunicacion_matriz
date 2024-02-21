@@ -3,6 +3,7 @@ import PySimpleGUI as sg
 import csv
 import os
 import time
+from datetime import datetime
 #monitoreo de archivos
 import threading
 import watchdog
@@ -18,6 +19,7 @@ from tools import logger, notificacion
 # Declarar el logger
 logger = logger.setup_logger("analisis_matriz\mfg.log")
 
+# .... ::: Funciones de manejo de excepciones ::::: .....
 class MissingDataError(Exception):
     pass
 
@@ -56,6 +58,7 @@ def start_csv_observer(watched_folder):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        logger.info(f"Se ha interrumpido el monitoreo de archivos.{ time.strftime('%H:%M:%S') }")
         observer.stop()
     observer.join()        
 
@@ -83,17 +86,22 @@ def validar_datos(datos):
         if not datos["-JOB-"]:
             raise MissingDataError("El campo 'Job' es obligatorio y no puede estar vacío.")
     except ValueError:
+        logger.error("El valor de 'Job' debe ser un número entero.")
         raise InvalidDataError("El valor de 'Job' debe ser un número entero.")
+
 
     familia = str(datos["-FAMILIA-"])
 
     if not datos["-ENSAMBLE-"].startswith("003"):
+        logger.error("El valor de 'Ensamble' debe comenzar con '003'.")
         raise InvalidDataError("El valor de 'Ensamble' debe comenzar con '003'.")
     
     if not datos["-PARTE-"].startswith("014"):
+        logger.error("El valor de 'No.Parte' debe comenzar con '014'.")
         raise InvalidDataError("El valor de 'No.Parte' debe comenzar con '014'.")
     
     if datos["-EMPAQUETADO-"] == "Charola" and not datos["-MATRIZ-"]:
+        logger.error("El campo 'Matriz' es obligatorio cuando se selecciona 'Charola' en Empaquetado.")
         raise MissingDataError("El campo 'Matriz' es obligatorio cuando se selecciona 'Charola' en Empaquetado.")
 
     return datos["-JOB-"],familia, datos["-PARTE-"]
@@ -105,6 +113,7 @@ def cargar_datos_desde_csv(csv_file):
             next(reader)  # Saltar encabezados
             return [row for row in reader]
     except FileNotFoundError:
+        logger.error(f"El archivo '{csv_file}' no existe.")
         return []
 
 def guardar_datos_en_csv(datos):
@@ -142,7 +151,7 @@ def main():
         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], size=(11, 1), key="-SEC-", readonly=True),sg.Text("Ensamble", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-ENSAMBLE-")],
         [sg.Text("No. Parte", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-PARTE-"),sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola","N/A"], size=(11, 1), key="-EMPAQUETADO-", readonly=True,enable_events=True)],
         [sg.Text("Matriz", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-MATRIZ-", default_text="N/A")],
-        [sg.Button("Registrar", font=("monospace", 10, "bold"), key="-REGISTRAR-", size=(10, 1)),sg.Button("Editar", font=("monospace", 10, "bold"), key="-EDITAR-", size=(10, 1))],
+        [sg.Button("Registrar", font=("monospace", 10, "bold"), key="-REGISTRAR-", size=(10, 1)),sg.Button("Editar", font=("monospace", 10, "bold"), key="-EDITAR-", size=(10, 1)),(sg.Button("Eliminar", font=("monospace", 10, "bold"), key="-ELIMINAR-", size=(10, 1)))],
         [sg.Table(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"),
                   headings=["Job", "Familia", "Secuencia", "Ensamble","No.Parte","Empaquetado", "Matriz"],
                   auto_size_columns=True,
@@ -154,7 +163,7 @@ def main():
                   selected_row_colors=("white", "green"),
                   num_rows=20,
                   key="-TABLE-"),],
-        [sg.Multiline(size=(100, 10), key="-LOG-",text_color="green",background_color="black",autoscroll=True,enable_events=True,disabled=True)]
+        [sg.Multiline(size=(100, 4), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True)]
     ]
 
     window = sg.Window("Matriz de charola L5 - MFG", layout, size=(720, 600), element_justification="center", finalize=True, resizable=False)
@@ -165,7 +174,8 @@ def main():
     # Iniciar el hilo para la función run_filemonitor
     threading.Thread(target=run_file_monitor, daemon=True).start()
 
-    
+    texto = open("analisis_matriz\mfg.log", "r")
+    window["-LOG-"].update(texto.read())
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED: # si se cierra la ventana se cierra el programa
@@ -198,14 +208,17 @@ def main():
                     window["-MATRIZ-"].update("N/A")
                     #recargar tabla
                     window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))
-                    #window["-LOG-"].update(f"Datos guardados correctamente: {values} \n", append=True)
-                    window["-LOG-"].print(f"- Datos registrados correctamente: \n. {list(values.values())[0:7]} \n")
-                    
+                    #window["-LOG-"].print(f"- Datos registrados correctamente hora: \n. {list(values.values())[0:7]} \n")
+                    window["-LOG-"].print(f"\n- Datos registrados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {list(values.values())[0:7]} \n")
+                    logger.info(f"-Datos registrados correctamente: {list(values.values())[0:7]} \n")
                 except ValueError as e:
+                    logger.error(f"Error al guardar datos: {str(e)}")
                     sg.popup_error(f"Error al guardar datos:\n {str(e)}")
                 except MissingDataError as e:
+                    logger.error(f"Faltan datos obligatorios: {str(e)}")
                     sg.popup_error(f"Faltan datos obligatorios:\n {str(e)}")
                 except InvalidDataError as e:
+                    logger.error(f"Error en los datos: {str(e)}")
                     sg.popup_error(f"Error en los datos:\n {str(e)}")
         
         # Manejo de evento boton "Editar"
@@ -241,15 +254,62 @@ def main():
                                 edit_window.close()
                                 window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
                                 #window["-LOG-"].update(f"Datos guardados correctamente. {new_data} \n", append=True)
-                                window["-LOG-"].print(f"- Datos editados correctamente: \n {new_data} \n")
+                                window["-LOG-"].print(f"\n- Datos editados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {new_data} \n")
+                                logger.info(f"-Datos editados correctamente: {new_data} \n")
                                 break
                             except Exception as e:
+                                logger.error(f"Error al guardar cambios: {str(e)}")
                                 sg.popup_error(f"Error al guardar cambios:\n{str(e)}")
+        
+        # eliminar registro de tabla
+        if event == "-ELIMINAR-":
+            selected_rows = values["-TABLE-"]
+            if selected_rows:
+                selected_row = selected_rows[0]
+                if selected_row:
+                    respuesta = sg.popup_yes_no("¿Desea eliminar el registro seleccionado?")
+                    if respuesta == "Yes":
+                        try:
+                            # Obtener el índice de la fila seleccionada
+                            selected_index = selected_row
+
+                            # Cargar los datos actuales desde el archivo CSV
+                            csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
+                            datos_actuales = cargar_datos_desde_csv(csv_file)
+
+                            # Verificar si el índice seleccionado está dentro de los límites
+                            if selected_index < len(datos_actuales):
+                                # Eliminar la fila correspondiente al índice seleccionado
+                                del datos_actuales[selected_index]
+
+                                # Sobrescribir el archivo CSV con los datos actualizados
+                                with open(csv_file, mode='w', newline='') as file:
+                                    writer = csv.writer(file)
+                                    writer.writerow(["Job", "Familia", "Secuencia", "Ensamble", "No.Parte","Empaquetado", "Matriz"])
+                                    writer.writerows(datos_actuales)
+                                    
+                                # Actualizar la tabla con los datos actualizados
+                                window["-TABLE-"].update(values=datos_actuales)
+                                sg.popup("Registro eliminado correctamente.")
+                                
+                                # Imprimir en el Multiline que se han eliminado los datos seleccionados
+                                window["-LOG-"].print(f"\n - Datos eliminados modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n {datos_actuales[selected_index]} \n")
+                                logger.info(f"-Datos eliminados correctamente: {datos_actuales[selected_index]} \n")
+                            else:
+                                logger.error("No se puede eliminar la fila seleccionada. La fila no existe. \n")
+                                sg.popup_error("No se puede eliminar la fila seleccionada. La fila no existe.")
+                        except Exception as e:
+                            logger.error(f"Error al eliminar el registro: {str(e)} \n")
+            else:
+                sg.popup_error("No se ha seleccionado ninguna fila para eliminar.")
+
+
+
+                    
                                 
         if event == "-UPDATE_OUTPUT-":
-            # Actualizar la salida del Multiline de PySimpleGUI o notificar
-            #window["-LOG-"].print(values[event])
-            notificacion.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file='C:/Users/CECHEVARRIAMENDOZA/OneDrive - Cisco/Desktop/analisis_matriz/sonido.wav')
+            # lanzar notificacion
+            notificacion.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\sound\soft-notice-146623.wav')
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))
 
             

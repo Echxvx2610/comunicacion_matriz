@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 import csv
 import os
-from tools import logger
+from tools import logger, notificacion
 
 
 #  Cargar datos desde el archivo CSV
