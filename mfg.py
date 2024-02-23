@@ -1,4 +1,5 @@
 # mfg.py
+# autor: Cristian A. Echevarria Mendoza
 import PySimpleGUI as sg
 import csv
 import os
@@ -14,7 +15,7 @@ from queue import Queue
 #importacion de modulo propio
 from tools import logger, notificacion 
 
-
+#Nota : Falta corregir rutas para que archivos esten en el dico H como csv y log, lo demas se ira con la carpeta del proyecto!!!!!!
 
 # Declarar el logger
 logger = logger.setup_logger("analisis_matriz\mfg.log")
@@ -141,12 +142,14 @@ def guardar_datos_editados_en_csv(selected_row, new_data):
             writer.writerow(["Job", "Familia", "Secuencia", "Ensamble", "No.Parte","Empaquetado", "Matriz"])
             writer.writerows(datos_actuales)
     else:
+        logger.error(f"No se puede editar la fila {selected_row}. La fila seleccionada no existe.")
         raise ValueError(f"No se puede editar la fila {selected_row}. La fila seleccionada no existe.")
 
 # ..... ::::: Funcion main  ::::: .......
 def main():
     sg.theme("DarkGrey14")
     layout = [
+        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-JOB-"),sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-FAMILIA-")],
         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], size=(11, 1), key="-SEC-", readonly=True),sg.Text("Ensamble", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-ENSAMBLE-")],
         [sg.Text("No. Parte", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-PARTE-"),sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola","N/A"], size=(11, 1), key="-EMPAQUETADO-", readonly=True,enable_events=True)],
@@ -162,11 +165,12 @@ def main():
                   header_background_color='#2F4858',
                   selected_row_colors=("white", "green"),
                   num_rows=20,
-                  key="-TABLE-"),],
-        [sg.Multiline(size=(100, 4), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True)]
+                  key="-TABLE-")],
+        [sg.Multiline(size=(100, 4), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True,no_scrollbar=True)],
+        [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
     ]
 
-    window = sg.Window("Matriz de charola L5 - MFG", layout, size=(720, 600), element_justification="center", finalize=True, resizable=False)
+    window = sg.Window("Matriz de charola L5 - MFG", layout, size=(720, 635), element_justification="center", finalize=True, resizable=False)
     
     # Iniciar el hilo para actualizar la salida en el GUI
     threading.Thread(target=update_output_window, args=(window,), daemon=True).start()
@@ -231,6 +235,7 @@ def main():
                     selected_data = cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv")[selected_row]
                     # Crear una nueva ventana para editar los datos
                     edit_layout = [
+                        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
                         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[0], size=(13, 1), key="-JOB-")],
                         [sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[1], size=(13, 1), key="-FAMILIA-")],
                         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], default_value=selected_data[2], size=(11, 1), key="-SEC-", readonly=True)],

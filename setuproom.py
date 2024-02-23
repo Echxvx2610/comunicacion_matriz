@@ -1,12 +1,17 @@
+# setuproom.py
+# autor: Cristian A. Echevarria Mendoza
 import PySimpleGUI as sg
 import csv
 import os
 from tools import logger, notificacion
 
 
+#Nota : Falta corregir rutas para que archivos esten en el dico H como csv y log, lo demas se ira con la carpeta del proyecto!!!!!
+ 
 #  Cargar datos desde el archivo CSV
-csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
-logger = logger.setup_logger("analisis_matriz\setuproom.log")
+csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
+logger = logger.setup_logger("H:\Temporal\Analisis_matriz\setuproom.log")
+
 
 class MissingDataError(Exception):
     pass
@@ -15,10 +20,7 @@ class InvalidDataError(Exception):
     pass
 
 
-
 #........... ::::: Funciones para conexion entre app:::::::............
-
-
 
 
 # ..............:::::: Funciones de manejo de archivos :::::::.............
@@ -29,6 +31,7 @@ def cargar_datos_desde_csv(csv_file):
             next(reader)  # Saltar encabezados
             return [row for row in reader]
     except FileNotFoundError:
+        logger.error(f"El archivo '{csv_file}' no existe.")
         return []
 
 def guardar_datos_editados_en_csv(selected_row, new_data):
@@ -42,12 +45,14 @@ def guardar_datos_editados_en_csv(selected_row, new_data):
             writer.writerow(["Job", "Familia", "Secuencia", "Ensamble", "No.Parte","Empaquetado", "Matriz"])
             writer.writerows(datos_actuales)
     else:
+        logger.error(f"No se puede editar la fila {selected_row}. La fila seleccionada no existe.")
         raise ValueError(f"No se puede editar la fila {selected_row}. La fila seleccionada no existe.")
 
 def main():
     sg.theme("DarkGrey14")
 
     layout = [
+        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
         [sg.Table(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"),
                   headings=["Job", "Familia", "Secuencia", "Ensamble","No.Parte", "Empaquetado", "Matriz"],
                   auto_size_columns=True,
@@ -60,10 +65,11 @@ def main():
                   header_background_color='#2F4858',
                   key="-TABLE-")],
         [sg.Button("Editar", font=("monospace", 10, "bold"), size=(10, 1), key="-EDITAR-"),
-         sg.Button("Refrescar", font=("monospace", 10, "bold"), size=(10, 1), key="-REFRESCAR-")]
+         sg.Button("Refrescar", font=("monospace", 10, "bold"), size=(10, 1), key="-REFRESCAR-")],
+        [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
     ]
 
-    window = sg.Window("Matriz de charola L5 - SETUP", layout, size=(720, 400), element_justification="center", finalize=True, resizable=False)
+    window = sg.Window("Matriz de charola L5 - SETUP", layout, size=(720, 450), element_justification="center", finalize=True, resizable=False)
 
     while True:
         event, values = window.read()
@@ -80,6 +86,7 @@ def main():
                     selected_data = cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv")[selected_row]
                     # Crear una nueva ventana para editar los datos
                     edit_layout = [
+                        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
                         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[0], size=(13, 1), key="-JOB-")],
                         [sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[1], size=(13, 1), key="-FAMILIA-")],
                         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], default_value=selected_data[2], size=(11, 1), key="-SEC-", readonly=True)],
@@ -87,7 +94,8 @@ def main():
                         [sg.Text("No.Parte",font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[4], size=(13, 1), key="-PARTE-")],
                         [sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola"], default_value=selected_data[5], size=(11, 1), key="-EMPAQUETADO-", readonly=True)],
                         [sg.Text("Matriz", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[6], size=(13, 1), key="-MATRIZ-")],
-                        [sg.Button("Guardar Cambios", font=("monospace", 10, "bold"), key="-GUARDAR-")]
+                        [sg.Button("Guardar Cambios", font=("monospace", 10, "bold"), key="-GUARDAR-")],
+                        [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
                     ]
                     edit_window = sg.Window("Editar Datos", edit_layout, finalize=True)
                     while True:
@@ -103,6 +111,7 @@ def main():
                                 window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
                                 break
                             except Exception as e:
+                                logger.error(f"Error al guardar cambios:\n{str(e)}")
                                 sg.popup_error(f"Error al guardar cambios:\n{str(e)}")
 
         if event == "-REFRESCAR-":
