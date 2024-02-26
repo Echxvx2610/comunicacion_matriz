@@ -18,7 +18,7 @@ from tools import logger, notificacion
 #Nota : Falta corregir rutas para que archivos esten en el dico H como csv y log, lo demas se ira con la carpeta del proyecto!!!!!!
 
 # Declarar el logger
-logger = logger.setup_logger("analisis_matriz\mfg.log")
+logger = logger.setup_logger("H:\Temporal\Analisis_matriz\mfg.log")
 
 # .... ::: Funciones de manejo de excepciones ::::: .....
 class MissingDataError(Exception):
@@ -64,7 +64,7 @@ def start_csv_observer(watched_folder):
     observer.join()        
 
 def run_file_monitor():
-    start_csv_observer(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz")
+    start_csv_observer(r"H:\Temporal\Analisis_matriz")
 
 
 
@@ -118,7 +118,7 @@ def cargar_datos_desde_csv(csv_file):
         return []
 
 def guardar_datos_en_csv(datos):
-    csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
+    csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
 
     if not os.path.isfile(csv_file):
         with open(csv_file, mode='w', newline='') as file:
@@ -132,7 +132,7 @@ def guardar_datos_en_csv(datos):
         writer.writerow([job, familia, datos["-SEC-"], datos["-ENSAMBLE-"],datos["-PARTE-"],datos["-EMPAQUETADO-"], datos["-MATRIZ-"]])
 
 def guardar_datos_editados_en_csv(selected_row, new_data):
-    csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
+    csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
     datos_actuales = cargar_datos_desde_csv(csv_file)
 
     if selected_row < len(datos_actuales):
@@ -149,13 +149,13 @@ def guardar_datos_editados_en_csv(selected_row, new_data):
 def main():
     sg.theme("DarkGrey14")
     layout = [
-        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
+        [sg.Image(r'analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-JOB-"),sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-FAMILIA-")],
         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], size=(11, 1), key="-SEC-", readonly=True),sg.Text("Ensamble", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-ENSAMBLE-")],
         [sg.Text("No. Parte", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-PARTE-"),sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola","N/A"], size=(11, 1), key="-EMPAQUETADO-", readonly=True,enable_events=True)],
         [sg.Text("Matriz", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(size=(13, 1), key="-MATRIZ-", default_text="N/A")],
-        [sg.Button("Registrar", font=("monospace", 10, "bold"), key="-REGISTRAR-", size=(10, 1)),sg.Button("Editar", font=("monospace", 10, "bold"), key="-EDITAR-", size=(10, 1)),(sg.Button("Eliminar", font=("monospace", 10, "bold"), key="-ELIMINAR-", size=(10, 1)))],
-        [sg.Table(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"),
+        [sg.Button("Registrar", font=("monospace", 10, "bold"), key="-REGISTRAR-", size=(10, 1)),sg.Button("Editar", font=("monospace", 10, "bold"), key="-EDITAR-", size=(10, 1)),(sg.Button("Eliminar", font=("monospace", 10, "bold"), key="-ELIMINAR-", size=(10, 1))),(sg.Button("Recargar", font=("monospace", 10, "bold"), key="-RECARGAR-", size=(10, 1)))],
+        [sg.Table(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"),
                   headings=["Job", "Familia", "Secuencia", "Ensamble","No.Parte","Empaquetado", "Matriz"],
                   auto_size_columns=True,
                   row_colors=[('white', 'silver'), ('white', 'silver'), ('white', 'silver'), ('white', 'silver'), ('white', 'silver')],
@@ -178,7 +178,7 @@ def main():
     # Iniciar el hilo para la función run_filemonitor
     threading.Thread(target=run_file_monitor, daemon=True).start()
 
-    texto = open("analisis_matriz\mfg.log", "r")
+    texto = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
     window["-LOG-"].update(texto.read())
     while True:
         event, values = window.read()
@@ -211,19 +211,19 @@ def main():
                     window["-EMPAQUETADO-"].update("")
                     window["-MATRIZ-"].update("N/A")
                     #recargar tabla
-                    window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))
+                    window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))
                     #window["-LOG-"].print(f"- Datos registrados correctamente hora: \n. {list(values.values())[0:7]} \n")
                     window["-LOG-"].print(f"\n- Datos registrados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {list(values.values())[0:7]} \n")
-                    logger.info(f"-Datos registrados correctamente: {list(values.values())[0:7]} \n")
+                    logger.info(f"-Datos registrados correctamente:\n{list(values.values())[0:7]} \n")
                 except ValueError as e:
                     logger.error(f"Error al guardar datos: {str(e)}")
-                    sg.popup_error(f"Error al guardar datos:\n {str(e)}")
+                    sg.popup_error(f"Error al guardar datos:\n{str(e)}")
                 except MissingDataError as e:
                     logger.error(f"Faltan datos obligatorios: {str(e)}")
-                    sg.popup_error(f"Faltan datos obligatorios:\n {str(e)}")
+                    sg.popup_error(f"Faltan datos obligatorios:\n{str(e)}")
                 except InvalidDataError as e:
                     logger.error(f"Error en los datos: {str(e)}")
-                    sg.popup_error(f"Error en los datos:\n {str(e)}")
+                    sg.popup_error(f"Error en los datos:\n{str(e)}")
         
         # Manejo de evento boton "Editar"
         if event == "-EDITAR-":
@@ -232,10 +232,10 @@ def main():
                 selected_row = selected_rows[0]
                 if selected_row:
                     # Obtener los datos de la fila seleccionada
-                    selected_data = cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv")[selected_row]
+                    selected_data = cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv')[selected_row]
                     # Crear una nueva ventana para editar los datos
                     edit_layout = [
-                        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
+                        [sg.Image(r'analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
                         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[0], size=(13, 1), key="-JOB-")],
                         [sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[1], size=(13, 1), key="-FAMILIA-")],
                         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], default_value=selected_data[2], size=(11, 1), key="-SEC-", readonly=True)],
@@ -257,10 +257,10 @@ def main():
                                 guardar_datos_editados_en_csv(selected_row, new_data)
                                 sg.popup("Cambios guardados correctamente.")
                                 edit_window.close()
-                                window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
+                                window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))  # Actualizar la tabla después de editar
                                 #window["-LOG-"].update(f"Datos guardados correctamente. {new_data} \n", append=True)
                                 window["-LOG-"].print(f"\n- Datos editados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {new_data} \n")
-                                logger.info(f"-Datos editados correctamente: {new_data} \n")
+                                logger.info(f"-Datos editados correctamente:\n{new_data} \n")
                                 break
                             except Exception as e:
                                 logger.error(f"Error al guardar cambios: {str(e)}")
@@ -279,7 +279,7 @@ def main():
                             selected_index = selected_row
 
                             # Cargar los datos actuales desde el archivo CSV
-                            csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
+                            csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
                             datos_actuales = cargar_datos_desde_csv(csv_file)
 
                             # Verificar si el índice seleccionado está dentro de los límites
@@ -299,7 +299,7 @@ def main():
                                 
                                 # Imprimir en el Multiline que se han eliminado los datos seleccionados
                                 window["-LOG-"].print(f"\n - Datos eliminados modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n {datos_actuales[selected_index]} \n")
-                                logger.info(f"-Datos eliminados correctamente: {datos_actuales[selected_index]} \n")
+                                logger.info(f"-Datos eliminados correctamente:\n{datos_actuales[selected_index]} \n")
                             else:
                                 logger.error("No se puede eliminar la fila seleccionada. La fila no existe. \n")
                                 sg.popup_error("No se puede eliminar la fila seleccionada. La fila no existe.")
@@ -307,16 +307,17 @@ def main():
                             logger.error(f"Error al eliminar el registro: {str(e)} \n")
             else:
                 sg.popup_error("No se ha seleccionado ninguna fila para eliminar.")
-
-
-
-                    
-                                
+                
         if event == "-UPDATE_OUTPUT-":
             # lanzar notificacion
-            notificacion.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\sound\soft-notice-146623.wav')
-            window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))
-
+            notificacion.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
+            window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
+            # imprimir datos modificados
+            print(values[event])
+            #window["-LOG-"].print(f"\n - Datos modificados modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n {values[event]} \n")
+            #logger.info(f"-Datos modificados correctamente:\n{values[event]} \n")
+        elif event == "-RECARGAR-":
+            window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
             
     window.close()
     

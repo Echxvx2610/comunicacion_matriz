@@ -4,7 +4,13 @@ import PySimpleGUI as sg
 import csv
 import os
 from tools import logger, notificacion
-
+#monitoreo de archivos
+import threading
+import watchdog
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+from queue import Queue
+import time
 
 #Nota : Falta corregir rutas para que archivos esten en el dico H como csv y log, lo demas se ira con la carpeta del proyecto!!!!!
  
@@ -19,9 +25,52 @@ class MissingDataError(Exception):
 class InvalidDataError(Exception):
     pass
 
+#................ Funciones de conexión entre apps con watchdog ................
+# Definir una cola para pasar mensajes entre hilos
+output_queue = Queue()
 
-#........... ::::: Funciones para conexion entre app:::::::............
+# Variable global para almacenar el tiempo del ultimo evento
+last_event_time = 0
 
+class MyHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        global last_event_time
+        # Verificar si ha pasado suficiente tiempo desde el último evento
+        current_time = time.time()
+        if current_time - last_event_time < 2:  # Ignorar eventos dentro de un intervalo de 2 segundos
+            return
+        last_event_time = current_time
+        
+        if event.src_path.endswith(".csv"):
+            # Verificar si el mensaje ya está en la cola
+            message = f"Análisis de la matriz ha sido modificado!. Hora: {time.strftime('%H:%M:%S')}"
+            if message not in output_queue.queue:
+                output_queue.put(message)
+
+def start_csv_observer(watched_folder):                      
+    event_handler = MyHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=watched_folder, recursive=True)
+    observer.start()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info(f"Se ha interrumpido el monitoreo de archivos.{ time.strftime('%H:%M:%S') }")
+        observer.stop()
+    observer.join()        
+
+def run_file_monitor():
+    start_csv_observer(r"H:\Temporal\Analisis_matriz")
+
+
+
+# Función para leer mensajes de la cola y actualizar el Multiline de PySimpleGUI
+def update_output_window(window):
+    while True:
+        message = output_queue.get()  # Obtener mensaje de la cola
+        window.write_event_value('-UPDATE_OUTPUT-', message)  # Emitir evento para actualizar el GUI
 
 # ..............:::::: Funciones de manejo de archivos :::::::.............
 def cargar_datos_desde_csv(csv_file):
@@ -35,7 +84,7 @@ def cargar_datos_desde_csv(csv_file):
         return []
 
 def guardar_datos_editados_en_csv(selected_row, new_data):
-    csv_file = r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"
+    csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
     datos_actuales = cargar_datos_desde_csv(csv_file)
 
     if selected_row < len(datos_actuales):
@@ -52,8 +101,8 @@ def main():
     sg.theme("DarkGrey14")
 
     layout = [
-        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
-        [sg.Table(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"),
+        [sg.Image(r'analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
+        [sg.Table(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'),
                   headings=["Job", "Familia", "Secuencia", "Ensamble","No.Parte", "Empaquetado", "Matriz"],
                   auto_size_columns=True,
                   row_colors=[('white', 'silver'), ('white', 'silver'), ('white', 'silver'), ('white', 'silver'), ('white', 'silver')],
@@ -71,6 +120,12 @@ def main():
 
     window = sg.Window("Matriz de charola L5 - SETUP", layout, size=(720, 450), element_justification="center", finalize=True, resizable=False)
 
+    # Iniciar el hilo para actualizar la salida en el GUI
+    threading.Thread(target=update_output_window, args=(window,), daemon=True).start()
+
+    # Iniciar el hilo para la función run_filemonitor
+    threading.Thread(target=run_file_monitor, daemon=True).start()
+    
     while True:
         event, values = window.read()
 
@@ -83,10 +138,10 @@ def main():
                 selected_row = selected_rows[0]
                 if selected_row:
                     # Obtener los datos de la fila seleccionada
-                    selected_data = cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv")[selected_row]
+                    selected_data = cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv')[selected_row]
                     # Crear una nueva ventana para editar los datos
                     edit_layout = [
-                        [sg.Image(r'C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
+                        [sg.Image(r'analisis_matriz\img\LOGO_NAVICO_white.png',expand_x=False,expand_y=False,enable_events=True,key='-LOGO-'),sg.Push()],
                         [sg.Text("Job", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[0], size=(13, 1), key="-JOB-")],
                         [sg.Text("Familia", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[1], size=(13, 1), key="-FAMILIA-")],
                         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], default_value=selected_data[2], size=(11, 1), key="-SEC-", readonly=True)],
@@ -108,14 +163,18 @@ def main():
                                 guardar_datos_editados_en_csv(selected_row, new_data)
                                 sg.popup("Cambios guardados correctamente.")
                                 edit_window.close()
-                                window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
+                                window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
                                 break
                             except Exception as e:
                                 logger.error(f"Error al guardar cambios:\n{str(e)}")
                                 sg.popup_error(f"Error al guardar cambios:\n{str(e)}")
 
         if event == "-REFRESCAR-":
-            window["-TABLE-"].update(values=cargar_datos_desde_csv(r"C:\Users\CECHEVARRIAMENDOZA\OneDrive - Brunswick Corporation\Documents\Proyectos_Python\PysimpleGUI\Proyectos\analisis_matriz\datos_matriz.csv"))
+            window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))
+        
+        if event == "-UPDATE_OUTPUT-":
+            window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
+            
 
     window.close()
 
