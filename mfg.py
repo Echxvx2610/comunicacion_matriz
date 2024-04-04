@@ -13,7 +13,7 @@ from watchdog.observers import Observer
 from queue import Queue
 
 #importacion de modulo propio
-from tools import logger, notificacion 
+from tools import logger, alerta 
 
 #Nota : Falta corregir rutas para que archivos esten en el dico H como csv y log, lo demas se ira con la carpeta del proyecto!!!!!!
 
@@ -97,9 +97,10 @@ def validar_datos(datos):
         logger.error("El valor de 'Ensamble' debe comenzar con '003'.")
         raise InvalidDataError("El valor de 'Ensamble' debe comenzar con '003'.")
     
-    if not datos["-PARTE-"].startswith("014"):
-        logger.error("El valor de 'No.Parte' debe comenzar con '014'.")
-        raise InvalidDataError("El valor de 'No.Parte' debe comenzar con '014'.")
+    if not datos["-PARTE-"].startswith("014") and not datos["-PARTE-"].startswith("041"):
+        logger.error("El valor de 'No.Parte' debe comenzar con '014' o '041'.")
+        raise InvalidDataError("El valor de 'No.Parte' debe comenzar con '014' o '041'.")
+    
     
     if datos["-EMPAQUETADO-"] == "Charola" and not datos["-MATRIZ-"]:
         logger.error("El campo 'Matriz' es obligatorio cuando se selecciona 'Charola' en Empaquetado.")
@@ -166,11 +167,11 @@ def main():
                   selected_row_colors=("white", "green"),
                   num_rows=20,
                   key="-TABLE-")],
-        [sg.Multiline(size=(100, 4), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True,no_scrollbar=True)],
+        [sg.Multiline(size=(100, 7), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True,no_scrollbar=False)],
         [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
     ]
 
-    window = sg.Window("Matriz de charola L5 - MFG", layout, size=(720, 635), element_justification="center", finalize=True, resizable=False)
+    window = sg.Window("Matriz de charola L5 - MFG", layout,icon=r"analisis_matriz\img\control.ico", size=(720, 685), element_justification="center", finalize=True, resizable=False)
     
     # Iniciar el hilo para actualizar la salida en el GUI
     threading.Thread(target=update_output_window, args=(window,), daemon=True).start()
@@ -214,7 +215,7 @@ def main():
                     window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))
                     #window["-LOG-"].print(f"- Datos registrados correctamente hora: \n. {list(values.values())[0:7]} \n")
                     window["-LOG-"].print(f"\n- Datos registrados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {list(values.values())[0:7]} \n")
-                    logger.info(f"-Datos registrados correctamente:\n{list(values.values())[0:7]} \n")
+                    logger.info(f"-Datos registrados correctamente por MFG:\n{list(values.values())[0:7]} \n")
                 except ValueError as e:
                     logger.error(f"Error al guardar datos: {str(e)}")
                     sg.popup_error(f"Error al guardar datos:\n{str(e)}")
@@ -260,7 +261,7 @@ def main():
                                 window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))  # Actualizar la tabla después de editar
                                 #window["-LOG-"].update(f"Datos guardados correctamente. {new_data} \n", append=True)
                                 window["-LOG-"].print(f"\n- Datos editados correctamente modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: \n {new_data} \n")
-                                logger.info(f"-Datos editados correctamente:\n{new_data} \n")
+                                logger.info(f"-Datos editados correctamente por MFG:\n{new_data} \n")
                                 break
                             except Exception as e:
                                 logger.error(f"Error al guardar cambios: {str(e)}")
@@ -270,7 +271,7 @@ def main():
         if event == "-ELIMINAR-":
             selected_rows = values["-TABLE-"]
             if selected_rows:
-                selected_row = selected_rows[0]
+                selected_row = selected_rows[0]  # Obtener la primera fila seleccionada
                 if selected_row:
                     respuesta = sg.popup_yes_no("¿Desea eliminar el registro seleccionado?")
                     if respuesta == "Yes":
@@ -283,39 +284,39 @@ def main():
                             datos_actuales = cargar_datos_desde_csv(csv_file)
 
                             # Verificar si el índice seleccionado está dentro de los límites
-                            if selected_index < len(datos_actuales):
+                            if selected_index < len(datos_actuales) and selected_index >= 0:  # Verifica que el índice sea válido
                                 # Eliminar la fila correspondiente al índice seleccionado
                                 del datos_actuales[selected_index]
 
                                 # Sobrescribir el archivo CSV con los datos actualizados
                                 with open(csv_file, mode='w', newline='') as file:
                                     writer = csv.writer(file)
-                                    writer.writerow(["Job", "Familia", "Secuencia", "Ensamble", "No.Parte","Empaquetado", "Matriz"])
+                                    writer.writerow(["Job", "Familia", "Secuencia", "Ensamble", "No.Parte", "Empaquetado", "Matriz"])
                                     writer.writerows(datos_actuales)
-                                    
+
                                 # Actualizar la tabla con los datos actualizados
                                 window["-TABLE-"].update(values=datos_actuales)
                                 sg.popup("Registro eliminado correctamente.")
-                                
+
                                 # Imprimir en el Multiline que se han eliminado los datos seleccionados
                                 window["-LOG-"].print(f"\n - Datos eliminados modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n {datos_actuales[selected_index]} \n")
-                                logger.info(f"-Datos eliminados correctamente:\n{datos_actuales[selected_index]} \n")
+                                logger.info(f"-Datos eliminados correctamente por MFG:\n{datos_actuales[selected_index]} \n")
                             else:
                                 logger.error("No se puede eliminar la fila seleccionada. La fila no existe. \n")
                                 sg.popup_error("No se puede eliminar la fila seleccionada. La fila no existe.")
                         except Exception as e:
-                            logger.error(f"Error al eliminar el registro: {str(e)} \n")
-            else:
-                sg.popup_error("No se ha seleccionado ninguna fila para eliminar.")
+                            logger.error(f"Registro eliminado con error: {str(e)} \n")
+                    else:
+                        sg.popup_error("No se ha seleccionado ninguna fila para eliminar.")
+
                 
         if event == "-UPDATE_OUTPUT-":
             # lanzar notificacion
-            notificacion.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
+            alerta.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
-            # imprimir datos modificados
-            print(values[event])
-            #window["-LOG-"].print(f"\n - Datos modificados modf: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n {values[event]} \n")
-            #logger.info(f"-Datos modificados correctamente:\n{values[event]} \n")
+            new_text = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
+            window["-LOG-"].update(new_text.read())
+            
         elif event == "-RECARGAR-":
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
             

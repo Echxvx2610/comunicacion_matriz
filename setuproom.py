@@ -3,7 +3,7 @@
 import PySimpleGUI as sg
 import csv
 import os
-from tools import logger, notificacion
+from tools import logger, alerta
 #monitoreo de archivos
 import threading
 import watchdog
@@ -16,7 +16,7 @@ import time
  
 #  Cargar datos desde el archivo CSV
 csv_file = r"H:\Temporal\Analisis_matriz\datos_matriz.csv"
-logger = logger.setup_logger("H:\Temporal\Analisis_matriz\setuproom.log")
+logger = logger.setup_logger("H:\Temporal\Analisis_matriz\mfg.log")
 
 
 class MissingDataError(Exception):
@@ -113,12 +113,13 @@ def main():
                   selected_row_colors=('white', 'green'),
                   header_background_color='#2F4858',
                   key="-TABLE-")],
+        [sg.Multiline(size=(118, 7), key="-LOG-",text_color="white",background_color="black",autoscroll=True,enable_events=True,disabled=True,no_scrollbar=False)],
         [sg.Button("Editar", font=("monospace", 10, "bold"), size=(10, 1), key="-EDITAR-"),
          sg.Button("Refrescar", font=("monospace", 10, "bold"), size=(10, 1), key="-REFRESCAR-")],
         [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
     ]
 
-    window = sg.Window("Matriz de charola L5 - SETUP", layout, size=(720, 450), element_justification="center", finalize=True, resizable=False)
+    window = sg.Window("Matriz de charola L5 - SETUP", layout,icon=r"analisis_matriz\img\data-analytics_2340033.ico", size=(700, 570), element_justification="center", finalize=True, resizable=False)
 
     # Iniciar el hilo para actualizar la salida en el GUI
     threading.Thread(target=update_output_window, args=(window,), daemon=True).start()
@@ -126,6 +127,9 @@ def main():
     # Iniciar el hilo para la función run_filemonitor
     threading.Thread(target=run_file_monitor, daemon=True).start()
     
+    
+    texto = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
+    window["-LOG-"].update(texto.read())
     while True:
         event, values = window.read()
 
@@ -164,6 +168,7 @@ def main():
                                 sg.popup("Cambios guardados correctamente.")
                                 edit_window.close()
                                 window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))  # Actualizar la tabla después de editar
+                                logger.info(f"- Datos editados por Setup Room:\n {new_data} \n")
                                 break
                             except Exception as e:
                                 logger.error(f"Error al guardar cambios:\n{str(e)}")
@@ -173,9 +178,13 @@ def main():
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r"H:\Temporal\Analisis_matriz\datos_matriz.csv"))
         
         if event == "-UPDATE_OUTPUT-":
+            # lanzar notificacion
+            alerta.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
+            new_text = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
+            window["-LOG-"].update(new_text.read())
             
-
+            
     window.close()
 
 if __name__ == "__main__":
