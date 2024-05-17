@@ -311,11 +311,18 @@ def main():
 
                 
         if event == "-UPDATE_OUTPUT-":
-            # lanzar notificacion
-            alerta.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
-            window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
-            new_text = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
-            window["-LOG-"].update(new_text.read())
+            try:
+                # lanzar notificacion
+                alerta.mostrar_notificacion_con_sonido(title='Analisis de la Matriz MFG', message=values[event], sound_file=r'analisis_matriz\sound\soft-notice-146623.wav')
+                window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
+                new_text = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
+                window["-LOG-"].update(new_text.read())
+            except Exception as e:
+                logger.error(f"Error al mostrar notificación: {str(e)} \n")
+                window["-LOG-"].update(f"Error al mostrar notificación: {str(e)} \n", append=True)
+                window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))
+                new_text = open("H:\Temporal\Analisis_matriz\mfg.log", "r")
+                window["-LOG-"].update(new_text.read())
             
         elif event == "-RECARGAR-":
             window["-TABLE-"].update(values=cargar_datos_desde_csv(r'H:\Temporal\Analisis_matriz\datos_matriz.csv'))

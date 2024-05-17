@@ -151,7 +151,7 @@ def main():
                         [sg.Text("Secuencia", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["10", "20"], default_value=selected_data[2], size=(11, 1), key="-SEC-", readonly=True)],
                         [sg.Text("Ensamble", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[3], size=(13, 1), key="-ENSAMBLE-")],
                         [sg.Text("No.Parte",font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[4], size=(13, 1), key="-PARTE-")],
-                        [sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola"], default_value=selected_data[5], size=(11, 1), key="-EMPAQUETADO-", readonly=True)],
+                        [sg.Text("Empaquetado", font=("monospace", 12, "bold"), size=(11, 1)), sg.Combo(["Rollo", "Charola"], default_value=selected_data[5], size=(11, 1), key="-EMPAQUETADO-", readonly=True,enable_events=True)],
                         [sg.Text("Matriz", font=("monospace", 12, "bold"), size=(11, 1)), sg.InputText(selected_data[6], size=(13, 1), key="-MATRIZ-")],
                         [sg.Button("Guardar Cambios", font=("monospace", 10, "bold"), key="-GUARDAR-")],
                         [sg.Text("Created by: Cristian Echevarría",font=('Arial',8,'italic'))]
@@ -161,6 +161,12 @@ def main():
                         edit_event, edit_values = edit_window.read()
                         if edit_event == sg.WIN_CLOSED:
                             break
+                        if edit_event == "-EMPAQUETADO-" and edit_values["-EMPAQUETADO-"] == "Rollo":
+                            edit_window["-MATRIZ-"].update(value="N/A")
+                            edit_window["-MATRIZ-"].update(disabled=True)
+                        else:
+                            edit_window["-MATRIZ-"].update(disabled=False)
+                        
                         if edit_event == "-GUARDAR-":
                             try:
                                 new_data = [edit_values["-JOB-"], edit_values["-FAMILIA-"], edit_values["-SEC-"], edit_values["-ENSAMBLE-"], edit_values["-PARTE-"], edit_values["-EMPAQUETADO-"], edit_values["-MATRIZ-"]]
